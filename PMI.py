@@ -8,13 +8,15 @@ class PMI(object):
         self.client = MongoClient(uri)
         self.db = self.client['nlp']
         self.Collect = self.db['pmi']
+        self.frequency = {}
             
-    def search_word_freq(self, keyword):
-        # get freq of word in input context.
-        result = self.Collect.find({'key':keyword}, {'freq':1, '_id':False}).limit(1)
-        if result.count()==0:
-            return 1
-        return result[0]['freq']
+    # def search_word_freq(self, keyword):
+    #     # get freq of word in input context.
+    #     result = self.Collect.find({'key':keyword}, {'freq':1, '_id':False}).limit(1)
+    #     if result.count()==0:
+    #         return 1
+
+    #     return result[0]['freq']
 
     def checkHasPMI(self, keyword):
         # check if it already has PMI result or not
@@ -27,61 +29,56 @@ class PMI(object):
             return False
         return True
 
-    def getWordFreqList(self):
-        # result all freqency of word in type of dict.
-        result = {}
+    def getWordFreqItems(self):
+        # result all frequency of word in type of dict.
+        self.frequency = {}
         for i in self.db['kcm'].find():
             keyword = i['key']
             for correlationTermsArr in i['value']:
                 corTermCount = correlationTermsArr[1]
 
                 # accumulate keyword's frequency.
-                result[keyword] = result.setdefault(keyword, 0) + corTermCount
+                self.frequency[keyword] = self.frequency.setdefault(keyword, 0) + corTermCount
 
-        return result.items()
+        return self.frequency.items()
 
     def build(self):
         import pymongo
         self.Collect.remove({})
 
-        # read frequency file and insert into MongoDB. 
-        # with format {key:'中興大學', freq:100, value:[]}
+        # read all frequency from KCM and build all PMI of KCM in MongoDB. 
+        # with format {key:'中興大學', freq:100, value:[(keyword, PMI-value), (keyword, PMI-value)...]}
         result = []
-        for keyword, amount in self.getWordFreqList():
-            result.append({'key':keyword, 'freq':amount, 'value':[]})
+        for keyword, keyword_freq in self.getWordFreqItems():
+            pmiResult = []
+
+            for kcm_pair in list(self.db['kcm'].find({'key':keyword}, {'value':1, '_id':False}).limit(1))[0]['value']:
+
+                # PMI = log2(p(x, y)/p(x)*p(y)) 
+                # frequency of total keyword = 154451970
+                # p(x, y) = frequency of (x, y) / frequency of total keyword.
+                # p(x) = frequency of x / frequency of total keyword.
+                value=(math.log10( int(kcm_pair[1]) * 154451970  /(float(keyword_freq) * int(self.frequency[kcm_pair[0]])  )) / math.log10(2))
+
+                # this equation is contributed by 陳聖軒. 
+                # contact him with facebook: https://www.facebook.com/henrymayday
+                value*=(math.log10(int(self.frequency[kcm_pair[0]]))/math.log10(2))
+
+                pmiResult.append((kcm_pair[0], value))
+
+            pmiResult = sorted(pmiResult, key = lambda x: -x[1])
+            result.append({'key':keyword, 'freq':keyword_freq, 'value':pmiResult})
 
         self.Collect.insert(result)
         self.Collect.create_index([("key", pymongo.HASHED)])
 
     def get(self, keyword, amount):
         # return PMI value of this keyword
-        # if doesn't exist in MongoDB, then query for 1000 PMI kcm for this specific keyword.
+        # if doesn't exist in MongoDB, then return [].
 
         if self.checkHasPMI(keyword):
             return list(self.Collect.find({'key':keyword}, {'value':1, '_id':False}).limit(1))[0]['value'][:amount]
-        else:
-            keyword_freq = self.search_word_freq(keyword)
-            result = []
-
-            cursor = self.db['kcm'].find({'key':keyword}, {'value':1, '_id':False}).limit(1)
-            if cursor.count() == 0:
-                return []
-            for kcm_pair in list(cursor)[0]['value']:
-
-                # PMI = log2(p(x, y)/p(x)*p(y)) 
-                # frequency of total keyword = 154451970
-                # p(x, y) = frequency of (x, y) / frequency of total keyword.
-                # p(x) = frequency of x / frequency of total keyword.
-                value=(math.log10( int(kcm_pair[1]) * 154451970  /(float(keyword_freq) * int(self.search_word_freq(kcm_pair[0]))  )) / math.log10(2))
-
-                # this equation is contributed by 陳聖軒. 
-                # contact him with facebook: https://www.facebook.com/henrymayday
-                value*=(math.log10(int(self.search_word_freq(kcm_pair[0])))/math.log10(2))
-                result.append((kcm_pair[0], value))
-
-            result = sorted(result, key = lambda x: -x[1])
-            self.Collect.update({'key':keyword}, {'$set':{'value':result}})
-            return result[:amount]
+        return []
 
 if __name__ == '__main__':
     p = PMI()
