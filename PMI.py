@@ -10,12 +10,16 @@ class PMI(object):
         self.Collect = self.db['pmi']
             
     def search_word_freq(self, keyword):
+        # get freq of word in input context.
         result = self.Collect.find({'key':keyword}, {'freq':1, '_id':False}).limit(1)
         if result.count()==0:
             return 1
         return result[0]['freq']
 
     def checkHasPMI(self, keyword):
+        # check if it already has PMI result or not
+        # if not, need to calculate at first time.
+        # if already has PMI, then just query it in mongoDB, it will save alot of times.
         result = self.Collect.find({'key':keyword}, {'freq':1, 'value':1, '_id':False}).limit(1)
         if result.count() == 0:
             return False
@@ -24,13 +28,14 @@ class PMI(object):
         return True
 
     def getWordFreqList(self):
+        # result all freqency of word in type of dict.
         result = {}
         for i in self.db['kcm'].find():
             keyword = i['key']
             for correlationTermsArr in i['value']:
                 corTermCount = correlationTermsArr[1]
 
-                # accumulate keyword'c frequency.
+                # accumulate keyword's frequency.
                 result[keyword] = result.setdefault(keyword, 0) + corTermCount
 
         return result.items()
