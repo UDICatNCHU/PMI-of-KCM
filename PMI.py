@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import math, requests, pyprind, json
+import math, pyprind, json
 from pymongo import MongoClient
 
 class PMI(object):
@@ -58,7 +58,7 @@ class PMI(object):
             keyword_freq = self.search_word_freq(keyword)
             result = []
 
-            for kcm_pair in json.loads(requests.get('http://api.udic.cs.nchu.edu.tw/api/kcm', {'keyword':keyword, 'lang':'cht', 'num':1000}).text):
+            for kcm_pair in list(self.db['kcm'].find({'key':keyword}, {'value':1, '_id':False}).limit(1))[0]['value']:
 
                 # PMI = log2(p(x, y)/p(x)*p(y)) 
                 # frequency of total keyword = 154451970
@@ -78,4 +78,4 @@ class PMI(object):
 if __name__ == '__main__':
     p = PMI()
     p.build()
-    print(p.get('蔡英文', 10))
+    print(p.get("綠委", 10))
