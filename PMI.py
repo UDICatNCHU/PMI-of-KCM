@@ -9,14 +9,6 @@ class PMI(object):
         self.db = self.client['nlp']
         self.Collect = self.db['pmi']
         self.frequency = {}
-            
-    # def search_word_freq(self, keyword):
-    #     # get freq of word in input context.
-    #     result = self.Collect.find({'key':keyword}, {'freq':1, '_id':False}).limit(1)
-    #     if result.count()==0:
-    #         return 1
-
-    #     return result[0]['freq']
 
     def checkHasPMI(self, keyword):
         # check if it already has PMI result or not
@@ -53,18 +45,19 @@ class PMI(object):
             pmiResult = []
 
             for kcm_pair in list(self.db['kcm'].find({'key':keyword}, {'value':1, '_id':False}).limit(1))[0]['value']:
+                kcmKeyword, kcmCount = kcm_pair[0], kcm_pair[1]
 
                 # PMI = log2(p(x, y)/p(x)*p(y)) 
                 # frequency of total keyword = 154451970
                 # p(x, y) = frequency of (x, y) / frequency of total keyword.
                 # p(x) = frequency of x / frequency of total keyword.
-                value=(math.log10( int(kcm_pair[1]) * 154451970  /(float(keyword_freq) * int(self.frequency[kcm_pair[0]])  )) / math.log10(2))
+                value=(math.log10( int(kcmCount) * 154451970  /(float(keyword_freq) * int(self.frequency[kcmKeyword])  )) / math.log10(2))
 
                 # this equation is contributed by 陳聖軒. 
                 # contact him with facebook: https://www.facebook.com/henrymayday
-                value*=(math.log10(int(self.frequency[kcm_pair[0]]))/math.log10(2))
+                value*=(math.log10(int(self.frequency[kcmKeyword]))/math.log10(2))
 
-                pmiResult.append((kcm_pair[0], value))
+                pmiResult.append((kcmKeyword, value))
 
             pmiResult = sorted(pmiResult, key = lambda x: -x[1])
             result.append({'key':keyword, 'freq':keyword_freq, 'value':pmiResult})
