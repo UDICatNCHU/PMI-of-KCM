@@ -58,7 +58,10 @@ class PMI(object):
             keyword_freq = self.search_word_freq(keyword)
             result = []
 
-            for kcm_pair in list(self.db['kcm'].find({'key':keyword}, {'value':1, '_id':False}).limit(1))[0]['value']:
+            cursor = self.db['kcm'].find({'key':keyword}, {'value':1, '_id':False}).limit(1)
+            if cursor.count() == 0:
+                return []
+            for kcm_pair in list(cursor)[0]['value']:
 
                 # PMI = log2(p(x, y)/p(x)*p(y)) 
                 # frequency of total keyword = 154451970
