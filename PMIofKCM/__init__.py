@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import math, pyprind, json
+import math
 from pymongo import MongoClient
 
 class PMI(object):
