@@ -9,3 +9,4 @@ PMIofKCM/models.py
 PMIofKCM/tests.py
 PMIofKCM/urls.py
 PMIofKCM/views.py
+PMIofKCM/management/commands/buildPMI.py
