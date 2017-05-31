@@ -49,7 +49,8 @@ These instructions will get you a copy of the project up and running on your loc
     ]
     ```
 
-3. `python manage.py runserver`：即可進入頁面 `127.0.0.1:8000/pmi` 測試 pmi 是否安裝成功。
+3. use `python manage.py buildPMI` to build model of PMIofKCM.
+4. `python manage.py runserver`：即可進入頁面 `127.0.0.1:8000/pmi` 測試 pmi 是否安裝成功。
 
 ### Break down into end to end tests
 
