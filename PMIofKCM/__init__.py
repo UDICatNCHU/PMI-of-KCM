@@ -34,7 +34,7 @@ class PMI(object):
         import pymongo
         self.Collect.remove({})
         frequency_of_total_keyword, WordFreqItems = self.getWordFreqItems()
-        print('frequency of total keyword:'+frequency_of_total_keyword)
+        print('frequency of total keyword:'+str(frequency_of_total_keyword))
         # read all frequency from KCM and build all PMI of KCM in MongoDB. 
         # with format {key:'中興大學', freq:100, value:[(keyword, PMI-value), (keyword, PMI-value)...]}
         result = []
