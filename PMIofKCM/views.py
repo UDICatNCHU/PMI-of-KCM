@@ -4,6 +4,10 @@ from djangoApiDec.djangoApiDec import queryString_required
 from PMIofKCM import PMI
 from udic_nlp_API.settings_database import uri
 
+multilanguage_model = {
+    'zh': PMI('zh', uri)
+}
+
 @queryString_required(['lang', 'keyword'])
 def pmi(request):
     """Generate list of term data source files
@@ -12,5 +16,5 @@ def pmi(request):
     """
     keyword = request.GET['keyword']
     lang = request.GET['lang']
-    p = PMI(uri)
+    p = multilanguage_model['lang']
     return JsonResponse(p.get(keyword, int(request.GET['num']) if 'num' in request.GET else 10), safe=False)

@@ -2,7 +2,6 @@
 setup.cfg
 setup.py
 PMIofKCM/__init__.py
-PMIofKCM/__main__.py
 PMIofKCM/admin.py
 PMIofKCM/apps.py
 PMIofKCM/models.py
