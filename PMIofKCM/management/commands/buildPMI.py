@@ -10,6 +10,7 @@ class Command(BaseCommand):
 		parser.add_argument('--lang', type=str)
 		
 	def handle(self, *args, **options):
+		self.stdout.write(self.style.SUCCESS('start building PMI model!!!'))
 		p = PMI(options['lang'], uri)
 		p.build()
 		p = PMI(options['lang'], uri)

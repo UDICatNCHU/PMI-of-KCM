@@ -1,30 +1,20 @@
 # PMI of KCM
 
-一個將PMI套用到KCM上的django套件
+Use Pointwise mutual information (PMI), or point mutual information to 
 
-## Getting Started
+## Install
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+* (Recommended): Use [docker-compose](https://github.com/udicatnchu/udic-nlp-api) to install
 
-### Prerequisities
+## Manually Install
 
-1. OS：Ubuntu / OSX would be nice
-2. environment：need python3 `sudo apt-get update; sudo apt-get install; python3 python3-dev`
+If you want to integrate `PMIofKCM` into your own django project, use manually install.
 
-### Installing
+* `pip install PMIofKCM`
 
-1. 使用虛擬環境 Use virtualenv is recommended：
-  1. `virtualenv venv`
-2. 啟動方法 How to activate virtualenv
-  1. for Linux：`. venv/bin/activate`
-  2. for Windows：`venv\Scripts\activate`
-3. 安裝 Install：`pip install PMIofKCM`
+### Config
 
-## Running & Testing
-
-## Run
-
-1. `settings.py`裏面需要新增`PMIofKCM`這個app：
+1. add django app `PMIofKCM` in `settings.py`：
 
   - add this:
 
@@ -37,7 +27,7 @@ These instructions will get you a copy of the project up and running on your loc
     ]
     ```
 
-2. `urls.py`需要新增下列代碼 把所有 `pmi` 開頭的request都導向到`PMIofKCM`這個app：
+2. add url patterns of PMIofKCM into `urls.py`：
 
   - add this:
 
@@ -49,31 +39,30 @@ These instructions will get you a copy of the project up and running on your loc
     ]
     ```
 
-3. use `python manage.py buildPMI` to build model of PMIofKCM.
-4. `python manage.py runserver`：即可進入頁面 `127.0.0.1:8000/pmi` 測試 pmi 是否安裝成功。
+3. use `python3 manage.py buildPMI --lang <lang, e.g., zh or en or th> ` to build model of PMIofKCM.
+4. fire `python manage.py runserver` and go `127.0.0.1:8000/` to check whether the config is all ok.
 
-### Break down into end to end tests
+## API
 
-not yet.
+1. the result of querying pmi model with keyword `周杰倫`(Captain America)：_`/pmi`_
+  - keyword
+  - num (default=10)
+  - keyFlag (default=[])
+  - valueFlag (defualt=[])
+  - example1：[http://udiclab.cs.nchu.edu.tw/pmi?keyword=周杰倫](http://udiclab.cs.nchu.edu.tw/pmi?keyword=周杰倫)
 
-### And coding style tests
-
-目前沒有coding style tests...
+      ```
+      
+      ```
 
 ## Deployment
 
 PMIofKCM is a django-app, so depends on django project.
 
-PMIofKCM 是一般的django插件，所以必須依存於django專案
-
 ## Built With
 
 * python3.5
 * pymongo
-
-## Versioning
-
-For the versions available, see the [tags on this repository](https://github.com/david30907d/KCM/releases).
 
 ## Contributors
 
@@ -83,5 +72,3 @@ For the versions available, see the [tags on this repository](https://github.com
 ## License
 
 This package use `GPL3.0` License.
-
-## Acknowledgments

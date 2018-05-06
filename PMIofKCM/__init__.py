@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
-import math, pymongo, os, gridfs, json
+import math, pymongo, os, gridfs, json, pickle
 from ngram import NGram
 import multiprocessing as mp
+from udic_nlp_API.settings_database import uri
+from PMIofKCM.utils.graceful_auto_reconnect import graceful_auto_reconnect
+from pympler.asizeof import asizeof
 
 class PMI(object):
 	"""docstring for PMI"""
@@ -13,16 +16,23 @@ class PMI(object):
 		self.fs = gridfs.GridFS(self.db)
 
 		self.Collect = self.db['pmi']
-		self.cpus = mp.cpu_count() - 2
+		self.cpus = math.ceil(mp.cpu_count() * 0.3)
 		self.frequency = {}
 
 		# use ngram for searching
 		self.pmiNgram = NGram((i['key'] for i in self.db['pmi'].find({}, {'key':1, '_id':False})))
 
 	def getWordFreqItems(self):
+		# use cache
+		if os.path.exists('frequency.pkl'):
+			self.frequency = pickle.load(open('frequency.pkl', 'rb'))
+			frequency_of_total_keyword = pickle.load(open('frequency_of_total_keyword.pkl', 'rb'))
+			return frequency_of_total_keyword
+
 		# return all frequency of word in type of dict.
 		self.frequency = {}
 		frequency_of_total_keyword = 0
+
 		# iterate through gridFS
 		for keyword in self.fs.list():
 			cursor = self.fs.find({"filename": keyword})[0]
@@ -40,6 +50,8 @@ class PMI(object):
 				# accumulate keyword's frequency.
 				self.frequency[keyword] = self.frequency.setdefault(keyword, 0) + corTermCount
 
+		pickle.dump(self.frequency, open('frequency.pkl', 'wb'))
+		pickle.dump(frequency_of_total_keyword, open('frequency_of_total_keyword.pkl', 'wb'))
 		return frequency_of_total_keyword
 
 	def build(self):
@@ -49,18 +61,34 @@ class PMI(object):
 		frequency_of_total_keyword = self.getWordFreqItems()
 		print('frequency of total keyword:'+str(frequency_of_total_keyword))
 
+		@graceful_auto_reconnect
 		def process_job(job_list):
 			# Each process need independent Mongo Client
 			# or it may raise Deadlock in Mongo.
-			db = pymongo.MongoClient(self.uri)['nlp_{}'.format(self.lang)]
+			client = pymongo.MongoClient(self.uri)
+			db = client['nlp_{}'.format(self.lang)]
 			process_collect = db['pmi']
 			kcm_collect = db['kcm']
+			fs = gridfs.GridFS(db)
 
 			result = []
 			for keyword, keyword_freq in job_list:
 				pmiResult = []
-				for kcmKeyword, PartOfSpeech, kcmCount in kcm_collect.find({'key':keyword}, {'value':1, '_id':False}).limit(1)[0]['value']:
 
+				collection_cursor = kcm_collect.find({'key':keyword}, {'value':1, '_id':False}).limit(1)
+				if collection_cursor.count() == 0:
+					##################################
+					#        this is a bug !!!       #
+					#      make MongoDB too busy     #
+					# [Errno 111] Connection refused #
+					##################################
+					# gridfs_cursor = fs.find({"filename": keyword}).limit(1)[0]
+					# cursor_result = json.loads(fs.get(gridfs_cursor._id).read().decode('utf-8'))
+					continue
+				else:
+					cursor_result = collection_cursor[0]['value']
+				for kcmKeyword, PartOfSpeech, kcmCount in cursor_result:
+					# algorithm:
 					# PMI = log2(p(x, y)/p(x)*p(y)) 
 					# p(x, y) = frequency of (x, y) / frequency of total keyword.
 					# p(x) = frequency of x / frequency of total keyword.
@@ -76,6 +104,21 @@ class PMI(object):
 
 				pmiResult = sorted(pmiResult, key = lambda x: -x[1])
 				result.append({'key':keyword, 'freq':keyword_freq, 'value':pmiResult})
+
+			##################################
+			#        this is a bug !!!       #
+			#      make MongoDB too busy     #
+			# [Errno 111] Connection refused #
+			##################################
+			# def Document_Generator():
+			# 	for payload in result:
+					# The maximum BSON document size is 16 megabytes.
+					# So if document exceeds this limit
+					# use GridFS to store it.
+					# if asizeof(payload) >= 16777216:
+					# 	fs.put(json.dumps(payload['value']), filename=payload['key'], contentType=payload['freq'], encoding='utf-8')
+					# 	yield payload
+					# yield payload
 			process_collect.insert(result)
 
 		amount = math.ceil(len(self.frequency)/self.cpus)
