@@ -16,5 +16,5 @@ def pmi(request):
     """
     keyword = request.GET['keyword']
     lang = request.GET['lang']
-    p = multilanguage_model['lang']
+    p = multilanguage_model[lang]
     return JsonResponse(p.get(keyword, int(request.GET['num']) if 'num' in request.GET else 10), safe=False)
