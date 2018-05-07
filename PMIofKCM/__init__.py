@@ -16,7 +16,7 @@ class PMI(object):
 		self.fs = gridfs.GridFS(self.db)
 
 		self.Collect = self.db['pmi']
-		self.cpus = math.ceil(mp.cpu_count() * 0.3)
+		self.cpus = math.ceil(mp.cpu_count() * 0.2)
 		self.frequency = {}
 
 		# use ngram for searching
@@ -77,14 +77,8 @@ class PMI(object):
 
 				collection_cursor = kcm_collect.find({'key':keyword}, {'value':1, '_id':False}).limit(1)
 				if collection_cursor.count() == 0:
-					##################################
-					#        this is a bug !!!       #
-					#      make MongoDB too busy     #
-					# [Errno 111] Connection refused #
-					##################################
-					# gridfs_cursor = fs.find({"filename": keyword}).limit(1)[0]
-					# cursor_result = json.loads(fs.get(gridfs_cursor._id).read().decode('utf-8'))
-					continue
+					gridfs_cursor = fs.find({"filename": keyword}).limit(1)[0]
+					cursor_result = json.loads(fs.get(gridfs_cursor._id).read().decode('utf-8'))[:500]
 				else:
 					cursor_result = collection_cursor[0]['value']
 				for kcmKeyword, PartOfSpeech, kcmCount in cursor_result:
@@ -105,21 +99,10 @@ class PMI(object):
 				pmiResult = sorted(pmiResult, key = lambda x: -x[1])
 				result.append({'key':keyword, 'freq':keyword_freq, 'value':pmiResult})
 
-			##################################
-			#        this is a bug !!!       #
-			#      make MongoDB too busy     #
-			# [Errno 111] Connection refused #
-			##################################
-			# def Document_Generator():
-			# 	for payload in result:
-					# The maximum BSON document size is 16 megabytes.
-					# So if document exceeds this limit
-					# use GridFS to store it.
-					# if asizeof(payload) >= 16777216:
-					# 	fs.put(json.dumps(payload['value']), filename=payload['key'], contentType=payload['freq'], encoding='utf-8')
-					# 	yield payload
-					# yield payload
-			process_collect.insert(result)
+				# Insert Collections into MongoDB
+				if len(result) > 5000:
+					process_collect.insert(result)
+					result = []
 
 		amount = math.ceil(len(self.frequency)/self.cpus)
 		job_list = list(self.frequency.items())
