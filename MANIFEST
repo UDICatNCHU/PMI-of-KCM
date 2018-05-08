@@ -9,3 +9,4 @@ PMIofKCM/tests.py
 PMIofKCM/urls.py
 PMIofKCM/views.py
 PMIofKCM/management/commands/buildPMI.py
+PMIofKCM/utils/graceful_auto_reconnect.py
