@@ -18,7 +18,7 @@ If you want to integrate `PMIofKCM` into your own django project, use manually i
 
   - add this:
 
-    ```
+    ```python
     INSTALLED_APPS=[
     ...
     ...
@@ -31,7 +31,7 @@ If you want to integrate `PMIofKCM` into your own django project, use manually i
 
   - add this:
 
-    ```
+    ```python
     # pmiOfKcm
     import PMIofKCM.urls
     urlpatterns += [
@@ -49,10 +49,39 @@ If you want to integrate `PMIofKCM` into your own django project, use manually i
   - num (default=10)
   - keyFlag (default=[])
   - valueFlag (defualt=[])
-  - example1：[http://udiclab.cs.nchu.edu.tw/pmi?keyword=周杰倫](http://udiclab.cs.nchu.edu.tw/pmi?keyword=周杰倫)
+  - example1：[http://udiclab.cs.nchu.edu.tw/pmi/?keyword=周杰倫&lang=zh](http://udiclab.cs.nchu.edu.tw/pmi/?keyword=周杰倫&lang=zh)
 
-      ```
-      
+      ```json
+      {
+        "value": [
+          [
+            "足協",
+            182.54887901332577
+          ],
+          [
+            "歐洲足球",
+            164.40832185981395
+          ],
+          [
+            "成員國",
+            160.17033554655106
+          ],
+          [
+            "會員",
+            155.96658603881642
+          ],
+          [
+            "歐洲",
+            155.04907093836462
+          ],
+          [
+            "UEFA",
+            151.3463095860187
+          ]
+        ],
+        "similarity": 1,
+        "key": "歐洲足球會協會"
+      }
       ```
 
 ## Deployment
