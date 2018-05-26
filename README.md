@@ -44,12 +44,12 @@ If you want to integrate `PMIofKCM` into your own django project, use manually i
 
 ## API
 
-1. the result of querying pmi model with keyword `周杰倫`(Captain America)：_`/pmi`_
+1. the result of querying pmi model with keyword `歐洲足球會協會`(Captain America)：_`/pmi`_
   - keyword
   - num (default=10)
   - keyFlag (default=[])
   - valueFlag (defualt=[])
-  - example1：[http://udiclab.cs.nchu.edu.tw/pmi/?keyword=周杰倫&lang=zh](http://udiclab.cs.nchu.edu.tw/pmi/?keyword=周杰倫&lang=zh)
+  - example1：[http://udiclab.cs.nchu.edu.tw/pmi/?keyword=歐洲足球會協會&lang=zh](http://udiclab.cs.nchu.edu.tw/pmi/?keyword=歐洲足球會協會&lang=zh)
 
       ```json
       {
