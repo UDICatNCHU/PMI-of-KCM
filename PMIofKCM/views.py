@@ -5,7 +5,7 @@ from PMIofKCM import PMI
 from udic_nlp_API.settings_database import uri
 
 multilanguage_model = {
-    'zh': PMI('zh', uri)
+    'zh': PMI('zh', uri, ngram=True)
 }
 
 @queryString_required(['lang', 'keyword'])

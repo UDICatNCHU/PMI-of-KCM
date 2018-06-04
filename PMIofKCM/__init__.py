@@ -8,7 +8,7 @@ from pympler.asizeof import asizeof
 
 class PMI(object):
 	"""docstring for PMI"""
-	def __init__(self, lang, uri=None):
+	def __init__(self, lang, uri=None, ngram=False):
 		self.client = pymongo.MongoClient(uri)
 		self.uri = uri
 		self.lang = lang
@@ -19,8 +19,9 @@ class PMI(object):
 		self.cpus = math.ceil(mp.cpu_count() * 0.2)
 		self.frequency = {}
 
-		# use ngram for searching
-		self.pmiNgram = NGram((i['key'] for i in self.db['pmi'].find({}, {'key':1, '_id':False})))
+		if ngram:
+			# use ngram for searching
+			self.pmiNgram = NGram((i['key'] for i in self.db['pmi'].find({}, {'key':1, '_id':False})))
 
 	def getWordFreqItems(self):
 		# use cache
